@@ -32,6 +32,10 @@ const path2 = [
   [37.6173, 55.7558], // 莫斯科，俄罗斯
   [-58.3816, -34.6037], // 布宜诺斯艾利斯，阿根廷
   [2.3522, 48.8566], // 巴黎，法国
+  [151.2093, -33.8688], // 悉尼，澳大利亚
+  [-0.1278, 51.5074], // 伦敦，英国
+  [18.4241, -33.9249], // 开普敦，南非
+  [139.6917, 35.6895], // 东京，日本
 ]
 
 // 起点终点
@@ -113,6 +117,7 @@ const vector = new VectorLayer({
             anchor: [0.5, 0.5],
             rotateWithView: true,
             rotation: -rotation,
+            scale: 0.2,
           }),
         }))
       }
@@ -149,7 +154,7 @@ modify.on('modifyend', (event) => {
       )) {
         flagModifyKeyPoint = true
         flagKeyPointChange = true
-        path.value = path2
+        path.value = getRandomArrayElements(path2)
       }
     }
     else if (item.get('type') === 'Path' && geometry instanceof LineString) {
@@ -166,7 +171,7 @@ modify.on('modifyend', (event) => {
     path.value = lineFeature.getGeometry()!.getCoordinates().map(item => toLonLat(item))
   }
 })
-// 修改关键点后，刷新关键点渲染
+// 修改关键点后，刷新关键点渲染，同时刷新路径点
 watch(keyPoints, () => {
   if (flagModifyKeyPoint) {
     flagModifyKeyPoint = false
@@ -180,6 +185,7 @@ watch(keyPoints, () => {
     })
   }
   source.addFeatures(keyPointFeatures.value)
+  path.value = getRandomArrayElements(path2)
 }, {
   deep: true,
 })
@@ -227,6 +233,26 @@ function addPoint() {
   keyPoints.value.push([116.4074, 39.9042])
   // path.value.push([16.4074, 39.9042])
 }
+function removePoint() {
+  keyPoints.value.pop()
+}
+
+// For fun
+function getRandomArrayElements(arr: Array<any>) {
+  const count = Math.floor(Math.random() * (arr.length - 2)) + 3 // 随机数量，确保大于2
+  const shuffled = arr.slice(0)
+  let i = arr.length
+  const min = i - count
+  let temp
+  let index
+  while (i-- > min) {
+    index = Math.floor((i + 1) * Math.random())
+    temp = shuffled[index]
+    shuffled[index] = shuffled[i]
+    shuffled[i] = temp
+  }
+  return shuffled.slice(min)
+}
 </script>
 
 <template>
@@ -242,6 +268,9 @@ function addPoint() {
   </button>
   <button @click="addPoint">
     Add Point
+  </button>
+  <button @click="removePoint">
+    Remove Point
   </button>
 </template>
 
