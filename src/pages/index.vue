@@ -126,13 +126,13 @@ const draw = new Draw({
   source,
   type: 'LineString',
 })
-const modify = new Modify({
+const modify = ref(new Modify({
   deleteCondition: singleClick,
   source,
-})
+}))
 let flagModifyKeyPoint = false
 let flagModifyPath = false
-modify.on('modifyend', (event) => {
+modify.value.on('modifyend', (event) => {
   let flagKeyPointChange = false
   let flagPathChange = false
   event.features.forEach((item) => {
@@ -199,20 +199,20 @@ onMounted(() => {
       zoom: 2,
     }),
   })
-  map.addInteraction(modify)
+  map.addInteraction(modify.value)
 })
 
 function drawLine() {
-  map!.removeInteraction(modify)
+  map!.removeInteraction(modify.value)
   map!.addInteraction(draw)
 }
 function editLine() {
   map!.removeInteraction(draw)
-  map!.addInteraction(modify)
+  map!.addInteraction(modify.value)
 }
 function cancelLine() {
   map!.removeInteraction(draw)
-  map!.removeInteraction(modify)
+  map!.removeInteraction(modify.value)
 }
 function addPoint() {
   keyPoints.value.push([116.4074, 39.9042])
