@@ -67,12 +67,12 @@ source.addFeature(lineFeature)
 
 const vector = new VectorLayer({
   source,
-  style: (feature, _index) => {
+  style: (feature, resolution) => {
     const styles = [
       new Style({
         stroke: new Stroke({
           color: '#ffcc33',
-          width: 2,
+          width: 10,
         }),
       }),
     ]
@@ -96,21 +96,26 @@ const vector = new VectorLayer({
           }),
         )
       })
-      for (let i = 0; i < coordinates.length - 1; i++) {
-        const start = coordinates[i]
-        const end = coordinates[i + 1]
+      const lineLength = geometry.getLength()
+      // 箭头间距
+      const arrowSpacing = 50 * resolution
+      const numArrows = Math.floor(lineLength / arrowSpacing)
+      for (let i = 0; i < numArrows; i++) {
+        const fraction = (i + 1) / (numArrows + 1)
+        const coordinate = geometry.getCoordinateAt(fraction)
+        const start = geometry.getCoordinateAt(fraction - 0.01)
+        const end = geometry.getCoordinateAt(fraction + 0.01)
         const dx = end[0] - start[0]
         const dy = end[1] - start[1]
         const rotation = Math.atan2(dy, dx)
-        const midPoint = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
         styles.push(new Style({
-          geometry: new Point(midPoint),
+          geometry: new Point(coordinate),
           image: new Icon({
             src: 'assets/arrow.png',
             anchor: [0.5, 0.5],
             rotateWithView: true,
             rotation: -rotation,
-            scale: 0.2,
+            scale: 0.02,
           }),
         }))
       }
@@ -126,13 +131,13 @@ const draw = new Draw({
   source,
   type: 'LineString',
 })
-const modify = ref(new Modify({
+const modify = new Modify({
   deleteCondition: singleClick,
   source,
-}))
+})
 let flagModifyKeyPoint = false
 let flagModifyPath = false
-modify.value.on('modifyend', (event) => {
+modify.on('modifyend', (event) => {
   let flagKeyPointChange = false
   let flagPathChange = false
   event.features.forEach((item) => {
@@ -199,20 +204,20 @@ onMounted(() => {
       zoom: 2,
     }),
   })
-  map.addInteraction(modify.value)
+  map.addInteraction(modify)
 })
 
 function drawLine() {
-  map!.removeInteraction(modify.value)
+  map!.removeInteraction(modify)
   map!.addInteraction(draw)
 }
 function editLine() {
   map!.removeInteraction(draw)
-  map!.addInteraction(modify.value)
+  map!.addInteraction(modify)
 }
 function cancelLine() {
   map!.removeInteraction(draw)
-  map!.removeInteraction(modify.value)
+  map!.removeInteraction(modify)
 }
 function addPoint() {
   keyPoints.value.push([116.4074, 39.9042])
