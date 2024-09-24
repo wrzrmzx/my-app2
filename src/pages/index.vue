@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { Feature, Map, View } from 'ol'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
 import { Vector as VectorSource, XYZ } from 'ol/source'
@@ -103,8 +103,8 @@ const vector = new VectorLayer({
       for (let i = 0; i < numArrows; i++) {
         const fraction = (i + 1) / (numArrows + 1)
         const coordinate = geometry.getCoordinateAt(fraction)
-        const start = geometry.getCoordinateAt(fraction - 0.01)
-        const end = geometry.getCoordinateAt(fraction + 0.01)
+        const start = geometry.getCoordinateAt(fraction - 0.001)
+        const end = geometry.getCoordinateAt(fraction + 0.001)
         const dx = end[0] - start[0]
         const dy = end[1] - start[1]
         const rotation = Math.atan2(dy, dx)
@@ -131,13 +131,13 @@ const draw = new Draw({
   source,
   type: 'LineString',
 })
-const modify = new Modify({
+const modify = shallowRef(new Modify({
   deleteCondition: singleClick,
   source,
-})
+}))
 let flagModifyKeyPoint = false
 let flagModifyPath = false
-modify.on('modifyend', (event) => {
+modify.value.on('modifyend', (event) => {
   let flagKeyPointChange = false
   let flagPathChange = false
   event.features.forEach((item) => {
@@ -204,20 +204,20 @@ onMounted(() => {
       zoom: 2,
     }),
   })
-  map.addInteraction(modify)
+  map.addInteraction(modify.value)
 })
 
 function drawLine() {
-  map!.removeInteraction(modify)
+  map!.removeInteraction(modify.value)
   map!.addInteraction(draw)
 }
 function editLine() {
   map!.removeInteraction(draw)
-  map!.addInteraction(modify)
+  map!.addInteraction(modify.value)
 }
 function cancelLine() {
   map!.removeInteraction(draw)
-  map!.removeInteraction(modify)
+  map!.removeInteraction(modify.value)
 }
 function addPoint() {
   keyPoints.value.push([116.4074, 39.9042])
